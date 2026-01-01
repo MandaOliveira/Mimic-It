@@ -1,0 +1,1009 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+  <title>Mimic It</title>
+  <style>
+    :root{
+      --bg:#0b0f14;
+      --card:#121824;
+      --muted:#9aa7b2;
+      --text:#e9eef3;
+      --btn:#1f2a3a;
+      --btn2:#27364a;
+      --primary:#2b3b52;
+      --ok:#1f6f4a;
+      --skip:#6b4a1f;
+      --danger:#6b1f2a;
+      --chip:#0e1520;
+      --line:rgba(255,255,255,.08);
+      --soft:rgba(255,255,255,.03);
+    }
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .wrap{ max-width:920px; margin:0 auto; padding:14px; }
+    .card{
+      background:var(--card);
+      border-radius:18px;
+      padding:16px;
+      box-shadow:0 10px 28px rgba(0,0,0,.35);
+    }
+    .hidden{ display:none !important; }
+
+    h1{ margin:0 0 6px; font-size:26px; }
+    .sub{ margin:0 0 14px; color:var(--muted); }
+    .tiny{ font-size:12px; color:var(--muted); margin-top:10px; line-height:1.35; }
+    .row{ display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+
+    .btn{
+      appearance:none;
+      border:0;
+      border-radius:14px;
+      padding:14px 16px;
+      background:var(--btn);
+      color:var(--text);
+      font-weight:850;
+      font-size:16px;
+      cursor:pointer;
+      flex:1;
+      min-width:170px;
+      touch-action: manipulation;
+    }
+    .btn:hover{ background:var(--btn2); }
+    .btn.primary{ background:var(--primary); }
+    .btn.ok{ background:var(--ok); }
+    .btn.skip{ background:var(--skip); }
+    .btn.danger{ background:var(--danger); }
+    .btn.small{ padding:10px 12px; font-size:14px; min-width:140px; flex:0; }
+    .btn:disabled{ opacity:.5; cursor:not-allowed; }
+
+    .pill{
+      background:var(--chip);
+      border:1px solid rgba(255,255,255,.06);
+      padding:10px 12px;
+      border-radius:999px;
+      font-weight:900;
+      letter-spacing:.35px;
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      white-space:nowrap;
+    }
+    .timer{ font-variant-numeric: tabular-nums; }
+
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-bottom:12px;
+    }
+
+    /* Forms */
+    .grid{ display:grid; gap:12px; grid-template-columns: 1fr 1fr; }
+    .field{
+      background:var(--soft);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:12px;
+    }
+    label{ display:block; font-size:12px; color:var(--muted); margin-bottom:6px; font-weight:800; }
+    input, select{
+      width:100%;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.10);
+      background:#0f1622;
+      color:var(--text);
+      padding:12px;
+      font-size:15px;
+      outline:none;
+    }
+    input:focus, select:focus{ border-color: rgba(255,255,255,.22); }
+
+    .playersList{ display:grid; gap:10px; grid-template-columns: 1fr 1fr; }
+    .note{
+      margin-top:10px;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.35;
+    }
+
+    /* Tabs */
+    .tabs{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+    .tab{
+      appearance:none;
+      border:1px solid rgba(255,255,255,.10);
+      background:transparent;
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:999px;
+      cursor:pointer;
+      font-weight:850;
+      touch-action: manipulation;
+    }
+    .tab.active{
+      background: rgba(255,255,255,.06);
+      border-color: rgba(255,255,255,.18);
+    }
+
+    .panel{ margin-top:12px; }
+
+    /* Titles */
+    .lang{
+      display:grid;
+      grid-template-columns: 90px 1fr;
+      gap:10px;
+      padding:10px 0;
+      border-top:1px solid rgba(255,255,255,.06);
+    }
+    .lang:first-child{ border-top:0; }
+    .tag{ color:var(--muted); font-weight:850; }
+    .title{ font-size:18px; font-weight:950; line-height:1.22; }
+
+    /* Synopsis */
+    .synWrap{ display:grid; gap:10px; grid-template-columns: 1fr; }
+    .synCard{
+      background:var(--soft);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:12px;
+    }
+    .synHead{ font-size:12px; color:var(--muted); font-weight:900; margin-bottom:6px; }
+    .synText{ font-size:15px; line-height:1.35; }
+
+    /* Poster */
+    .posterActions{ display:flex; justify-content:flex-end; margin-top:10px; }
+    .posterGrid{
+      display:grid;
+      gap:10px;
+      grid-template-columns: 1fr;
+    }
+    .posterCell{
+      background:var(--soft);
+      border:1px solid var(--line);
+      border-radius:14px;
+      overflow:hidden;
+    }
+    .posterCell img{ width:100%; height:auto; display:block; }
+    .blurred{ filter: blur(14px); transform: scale(1.03); }
+
+    /* time up / confirm areas */
+    .banner{
+      margin-top:14px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.08);
+      border-left: 6px solid var(--danger);
+      border-radius: 14px;
+      padding: 12px;
+    }
+    .banner strong{ display:block; margin-bottom:4px; }
+    .confirmArea{
+      margin-top:14px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.08);
+      border-left: 6px solid var(--ok);
+      border-radius: 14px;
+      padding: 12px;
+    }
+    .confirmArea strong{ display:block; margin-bottom:8px; }
+
+    /* Ranking */
+    .table{
+      width:100%;
+      border-collapse: collapse;
+      margin-top:12px;
+      overflow:hidden;
+      border-radius:14px;
+      border:1px solid var(--line);
+    }
+    .table th, .table td{
+      padding:12px;
+      border-bottom:1px solid rgba(255,255,255,.06);
+      text-align:left;
+    }
+    .table th{ color:var(--muted); font-size:12px; font-weight:900; background:rgba(255,255,255,.03); }
+    .table tr:last-child td{ border-bottom:0; }
+
+    @media (min-width: 560px){
+      .synWrap{ grid-template-columns: 1fr 1fr 1fr; }
+      .posterGrid{ grid-template-columns: 1fr 1fr; } /* até 4 imagens em 2x2 */
+    }
+    @media (max-width: 420px){
+      .wrap{ padding:10px; }
+      .btn{ min-width: 150px; }
+      .lang{ grid-template-columns: 74px 1fr; }
+      .title{ font-size:17px; }
+      .playersList{ grid-template-columns: 1fr; }
+      .grid{ grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+
+    <!-- SETUP -->
+    <section id="screenSetup" class="card">
+      <h1>Mimic It</h1>
+      <p class="sub">Party game multi-language (PT / EN / DE) • protótipo</p>
+
+      <div class="grid">
+        <div class="field">
+          <label for="targetCorrect">Número de filmes (acertos) na partida</label>
+          <input id="targetCorrect" type="number" min="1" max="999" value="10" />
+        </div>
+        <div class="field">
+          <label for="numPlayers">Número de jogadores</label>
+          <input id="numPlayers" type="number" min="2" max="12" value="4" />
+        </div>
+      </div>
+
+      <div class="field" style="margin-top:12px;">
+        <label>Jogadores (nomes)</label>
+        <div id="playersList" class="playersList"></div>
+        <div class="note">Dica: nomes curtos ajudam no ritmo. (Ex: “Ana”, “Bruno”, “Sara”).</div>
+      </div>
+
+      <div class="row" style="margin-top:12px;">
+        <button id="btnStartMatch" class="btn primary">Iniciar partida</button>
+      </div>
+
+      <div class="tiny">
+        Regras:
+        <br>• Acertou: quem faz a mímica +1, quem adivinha +2
+        <br>• Tempo acabou: quem faz a mímica -1 (não conta como filme da partida)
+        <br>• Pular: não altera pontos e não conta (timer continua)
+        <br>• A partida termina quando atingir o número de acertos definido acima.
+      </div>
+    </section>
+
+    <!-- GAME -->
+    <section id="screenGame" class="card hidden" aria-live="polite">
+      <div class="topbar">
+        <div class="row" style="gap:10px;">
+          <div class="pill">🎭 A mimicar: <span id="actorName">—</span></div>
+          <div class="pill">✅ Acertos: <span id="playedCount">0</span>/<span id="playedTarget">0</span></div>
+        </div>
+        <div class="row" style="gap:10px;">
+          <div class="pill timer" id="timerPill">02:00</div>
+          <div class="pill" id="statusPill">Rodada em andamento</div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs" role="tablist" aria-label="Informações do filme">
+        <button class="tab active" id="tabTitles" role="tab" aria-selected="true">Títulos</button>
+        <button class="tab" id="tabSynopsis" role="tab" aria-selected="false">Sinopse</button>
+        <button class="tab" id="tabPoster" role="tab" aria-selected="false">Poster</button>
+      </div>
+
+      <!-- Panels -->
+      <div class="panel" id="panelTitles" role="tabpanel">
+        <div id="titlesBox"></div>
+      </div>
+
+      <div class="panel hidden" id="panelSynopsis" role="tabpanel">
+        <div class="synWrap">
+          <div class="synCard">
+            <div class="synHead">PT</div>
+            <div class="synText" id="synPT">—</div>
+          </div>
+          <div class="synCard">
+            <div class="synHead">EN</div>
+            <div class="synText" id="synEN">—</div>
+          </div>
+          <div class="synCard">
+            <div class="synHead">DE</div>
+            <div class="synText" id="synDE">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel hidden" id="panelPoster" role="tabpanel">
+        <div id="posterGrid" class="posterGrid"></div>
+        <div class="posterActions">
+          <button id="btnTogglePoster" class="btn small">Revelar posters</button>
+        </div>
+        <div class="tiny">Os posters começam desfocados (evita spoiler). “Revelar” aplica a todos.</div>
+      </div>
+
+      <!-- Actions -->
+      <div class="row" style="margin-top:16px;">
+        <button id="btnCorrect" class="btn ok">✅ Acertou</button>
+        <button id="btnSkip" class="btn skip">⏭ Pular</button>
+      </div>
+
+      <!-- Confirm Correct (inline, not modal) -->
+      <div id="confirmArea" class="confirmArea hidden">
+        <strong>Registrar acerto</strong>
+        <div class="grid">
+          <div class="field" style="padding:10px;">
+            <label>Quem acertou?</label>
+            <select id="guesserSelect"></select>
+          </div>
+          <div class="field" style="padding:10px;">
+            <label>Quem estava a mimicar?</label>
+            <input id="actorReadonly" type="text" disabled />
+          </div>
+        </div>
+        <div class="row" style="margin-top:10px;">
+          <button id="btnConfirmCorrect" class="btn ok">Confirmar</button>
+          <button id="btnCancelCorrect" class="btn">Cancelar</button>
+        </div>
+        <div class="tiny">Regra: a mimicar +1, quem acertou +2. Só aqui conta 1 “filme” para a partida.</div>
+      </div>
+
+      <!-- Time up -->
+      <div id="timeUpArea" class="banner hidden">
+        <strong>Tempo esgotado</strong>
+        <div>Ninguém acertou — o jogador que estava a mimicar perde 1 ponto.</div>
+        <div class="row" style="margin-top:12px;">
+          <button id="btnTimeUpOk" class="btn primary" style="flex:0;min-width:160px;">OK</button>
+        </div>
+      </div>
+
+      <!-- Score quick view -->
+      <div class="field" style="margin-top:14px;">
+        <label>Pontuação atual</label>
+        <div id="scoreLine" class="tiny">—</div>
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <button id="btnEndMatch" class="btn danger">Encerrar partida</button>
+      </div>
+    </section>
+
+    <!-- RANKING -->
+    <section id="screenRanking" class="card hidden">
+      <h1>Ranking</h1>
+      <p class="sub">Fim da partida — ordenado por pontuação</p>
+
+      <table class="table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Jogador</th>
+            <th>Pontos</th>
+          </tr>
+        </thead>
+        <tbody id="rankingBody"></tbody>
+      </table>
+
+      <div class="row" style="margin-top:12px;">
+        <button id="btnNewMatch" class="btn primary">Nova partida</button>
+        <button id="btnPlayAgain" class="btn">Jogar novamente (mesmos jogadores)</button>
+      </div>
+
+      <div class="tiny">Dica de produto: depois dá para guardar histórico e “melhor de 3”.</div>
+    </section>
+
+  </div>
+
+  <script>
+    // =========================
+    // Data (MVP) — substitua/expanda
+    // =========================
+    // Títulos: PT-BR, PT-PT, EN, DE
+    // Sinopse: PT, EN, DE (3 idiomas)
+    // Posters: 1 a 4 URLs (poster_url_1..4)
+    const MOVIES = [
+      {
+        id:"m1",
+        title_pt_br:"O Poderoso Chefão",
+        title_pt_pt:"O Padrinho",
+        title_en:"The Godfather",
+        title_de:"Der Pate",
+        synopsis_pt:"A ascensão e os dilemas de uma família mafiosa, onde poder, lealdade e tradição colidem.",
+        synopsis_en:"A powerful crime family navigates loyalty, power, and legacy as their world shifts.",
+        synopsis_de:"Eine mächtige Mafiafamilie ringt um Loyalität, Macht und Vermächtnis.",
+        poster_url_1:"",
+        poster_url_2:"",
+        poster_url_3:"",
+        poster_url_4:""
+      },
+      {
+        id:"m2",
+        title_pt_br:"Esqueceram de Mim",
+        title_pt_pt:"Sozinho em Casa",
+        title_en:"Home Alone",
+        title_de:"Kevin – Allein zu Haus",
+        synopsis_pt:"Um menino fica sozinho no Natal e precisa se virar quando ladrões invadem sua casa.",
+        synopsis_en:"A kid is left home for Christmas and must outsmart burglars who break in.",
+        synopsis_de:"Ein Junge bleibt zu Weihnachten allein und muss Einbrecher austricksen.",
+        poster_url_1:"",
+        poster_url_2:"",
+        poster_url_3:"",
+        poster_url_4:""
+      },
+      {
+        id:"m3",
+        title_pt_br:"De Volta para o Futuro",
+        title_pt_pt:"Regresso ao Futuro",
+        title_en:"Back to the Future",
+        title_de:"Zurück in die Zukunft",
+        synopsis_pt:"Um adolescente viaja no tempo e precisa garantir que seus pais se apaixonem.",
+        synopsis_en:"A teen travels through time and must ensure his parents fall in love.",
+        synopsis_de:"Ein Teenager reist durch die Zeit und muss die Liebe seiner Eltern sichern.",
+        poster_url_1:"",
+        poster_url_2:"",
+        poster_url_3:"",
+        poster_url_4:""
+      },
+      {
+        id:"m4",
+        title_pt_br:"A Viagem de Chihiro",
+        title_pt_pt:"A Viagem de Chihiro",
+        title_en:"Spirited Away",
+        title_de:"Chihiros Reise ins Zauberland",
+        synopsis_pt:"Uma garota entra num mundo mágico e precisa salvar seus pais enquanto aprende a ser corajosa.",
+        synopsis_en:"A girl enters a magical world and must save her parents while finding her courage.",
+        synopsis_de:"Ein Mädchen gerät in eine magische Welt und muss ihre Eltern retten — und mutig werden.",
+        poster_url_1:"",
+        poster_url_2:"",
+        poster_url_3:"",
+        poster_url_4:""
+      }
+    ];
+
+    // =========================
+    // Config
+    // =========================
+    const ROUND_SECONDS = 120;
+    const RECENT_MEMORY = 6; // evita repetição óbvia entre baralhos
+
+    // =========================
+    // State
+    // =========================
+    let match = null; // { targetCorrect, moviesPlayed, players[], actorIndex, scores{}, deck[], deckIndex, recentIds[] }
+    let remainingSeconds = ROUND_SECONDS;
+    let timerId = null;
+    let currentMovie = null;
+    let postersRevealed = false;
+
+    // =========================
+    // DOM
+    // =========================
+    const screenSetup = document.getElementById("screenSetup");
+    const screenGame = document.getElementById("screenGame");
+    const screenRanking = document.getElementById("screenRanking");
+
+    const targetCorrectEl = document.getElementById("targetCorrect");
+    const numPlayersEl = document.getElementById("numPlayers");
+    const playersListEl = document.getElementById("playersList");
+    const btnStartMatch = document.getElementById("btnStartMatch");
+
+    const actorNameEl = document.getElementById("actorName");
+    const playedCountEl = document.getElementById("playedCount");
+    const playedTargetEl = document.getElementById("playedTarget");
+    const timerPill = document.getElementById("timerPill");
+    const statusPill = document.getElementById("statusPill");
+
+    const tabTitles = document.getElementById("tabTitles");
+    const tabSynopsis = document.getElementById("tabSynopsis");
+    const tabPoster = document.getElementById("tabPoster");
+    const panelTitles = document.getElementById("panelTitles");
+    const panelSynopsis = document.getElementById("panelSynopsis");
+    const panelPoster = document.getElementById("panelPoster");
+
+    const titlesBox = document.getElementById("titlesBox");
+    const synPT = document.getElementById("synPT");
+    const synEN = document.getElementById("synEN");
+    const synDE = document.getElementById("synDE");
+
+    const posterGrid = document.getElementById("posterGrid");
+    const btnTogglePoster = document.getElementById("btnTogglePoster");
+
+    const btnCorrect = document.getElementById("btnCorrect");
+    const btnSkip = document.getElementById("btnSkip");
+
+    const confirmArea = document.getElementById("confirmArea");
+    const guesserSelect = document.getElementById("guesserSelect");
+    const actorReadonly = document.getElementById("actorReadonly");
+    const btnConfirmCorrect = document.getElementById("btnConfirmCorrect");
+    const btnCancelCorrect = document.getElementById("btnCancelCorrect");
+
+    const timeUpArea = document.getElementById("timeUpArea");
+    const btnTimeUpOk = document.getElementById("btnTimeUpOk");
+
+    const scoreLine = document.getElementById("scoreLine");
+    const btnEndMatch = document.getElementById("btnEndMatch");
+
+    const rankingBody = document.getElementById("rankingBody");
+    const btnNewMatch = document.getElementById("btnNewMatch");
+    const btnPlayAgain = document.getElementById("btnPlayAgain");
+
+    // =========================
+    // Helpers
+    // =========================
+    const pad2 = n => String(n).padStart(2,"0");
+    const formatTime = s => `${pad2(Math.floor(s/60))}:${pad2(s%60)}`;
+
+    function show(el){ el.classList.remove("hidden"); }
+    function hide(el){ el.classList.add("hidden"); }
+
+    function switchScreen(which){
+      hide(screenSetup); hide(screenGame); hide(screenRanking);
+      if(which === "setup") show(screenSetup);
+      if(which === "game") show(screenGame);
+      if(which === "ranking") show(screenRanking);
+    }
+
+    function stopTimer(){
+      if(timerId) clearInterval(timerId);
+      timerId = null;
+    }
+
+    function resetTimer(){
+      remainingSeconds = ROUND_SECONDS;
+      timerPill.textContent = formatTime(ROUND_SECONDS);
+      statusPill.textContent = "Rodada em andamento";
+    }
+
+    function setButtonsEnabled(enabled){
+      btnSkip.disabled = !enabled;
+      btnCorrect.disabled = !enabled;
+    }
+
+    function showTimeUpUI(showIt){ showIt ? show(timeUpArea) : hide(timeUpArea); }
+    function showConfirmUI(showIt){ showIt ? show(confirmArea) : hide(confirmArea); }
+
+    function setTab(which){
+      const isTitles = which === "titles";
+      const isSynopsis = which === "synopsis";
+      const isPoster = which === "poster";
+
+      tabTitles.classList.toggle("active", isTitles);
+      tabSynopsis.classList.toggle("active", isSynopsis);
+      tabPoster.classList.toggle("active", isPoster);
+
+      tabTitles.setAttribute("aria-selected", String(isTitles));
+      tabSynopsis.setAttribute("aria-selected", String(isSynopsis));
+      tabPoster.setAttribute("aria-selected", String(isPoster));
+
+      panelTitles.classList.toggle("hidden", !isTitles);
+      panelSynopsis.classList.toggle("hidden", !isSynopsis);
+      panelPoster.classList.toggle("hidden", !isPoster);
+    }
+
+    function fisherYatesShuffle(arr){
+      for(let i = arr.length - 1; i > 0; i--){
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function buildDeck(){
+      // Embaralha IDs e evita repetição imediata com memória curta
+      let ids = MOVIES.map(m => m.id);
+      fisherYatesShuffle(ids);
+
+      if(!match.recentIds) match.recentIds = [];
+      const recentSet = new Set(match.recentIds);
+
+      // Heurística simples: se o primeiro cair em "recent", tenta trocar com alguém mais adiante
+      for(let k=0; k<Math.min(8, ids.length); k++){
+        if(recentSet.has(ids[0])){
+          const swapIdx = ids.findIndex((id, idx) => idx>0 && !recentSet.has(id));
+          if(swapIdx > 0){
+            [ids[0], ids[swapIdx]] = [ids[swapIdx], ids[0]];
+          } else {
+            break;
+          }
+        } else break;
+      }
+
+      match.deck = ids;
+      match.deckIndex = 0;
+    }
+
+    function getMovieById(id){
+      return MOVIES.find(m => m.id === id) || null;
+    }
+
+    function drawNextMovie(){
+      if(!match.deck || match.deckIndex >= match.deck.length){
+        buildDeck();
+      }
+
+      let id = match.deck[match.deckIndex++];
+      // mantém memória curta para reduzir repetição “óbvia”
+      match.recentIds.push(id);
+      if(match.recentIds.length > RECENT_MEMORY) match.recentIds.shift();
+
+      return getMovieById(id);
+    }
+
+    function renderMovie(movie){
+      // Titles
+      titlesBox.innerHTML = `
+        <div class="lang"><div class="tag">PT-BR</div><div class="title">${escapeHtml(movie.title_pt_br || "—")}</div></div>
+        <div class="lang"><div class="tag">PT-PT</div><div class="title">${escapeHtml(movie.title_pt_pt || "—")}</div></div>
+        <div class="lang"><div class="tag">EN</div><div class="title">${escapeHtml(movie.title_en || "—")}</div></div>
+        <div class="lang"><div class="tag">DE</div><div class="title">${escapeHtml(movie.title_de || "—")}</div></div>
+      `;
+
+      // Synopsis 3 idiomas
+      synPT.textContent = movie.synopsis_pt || "—";
+      synEN.textContent = movie.synopsis_en || "—";
+      synDE.textContent = movie.synopsis_de || "—";
+
+      // Posters 1..4
+      postersRevealed = false;
+      btnTogglePoster.textContent = "Revelar posters";
+      posterGrid.innerHTML = "";
+
+      const urls = [movie.poster_url_1, movie.poster_url_2, movie.poster_url_3, movie.poster_url_4].filter(Boolean);
+      if(urls.length === 0){
+        posterGrid.innerHTML = `<div class="synCard"><div class="synHead">Poster</div><div class="synText">Sem imagens no MVP.</div></div>`;
+        return;
+      }
+
+      urls.forEach((u, idx) => {
+        const cell = document.createElement("div");
+        cell.className = "posterCell";
+        const img = document.createElement("img");
+        img.src = u;
+        img.alt = `Poster ${idx+1}`;
+        img.classList.add("blurred");
+        cell.appendChild(img);
+        posterGrid.appendChild(cell);
+      });
+    }
+
+    function escapeHtml(str){
+      return String(str)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    function updateHeader(){
+      const actor = match.players[match.actorIndex];
+      actorNameEl.textContent = actor;
+      playedCountEl.textContent = String(match.moviesPlayed);
+      playedTargetEl.textContent = String(match.targetCorrect);
+    }
+
+    function updateScoreLine(){
+      const parts = match.players.map(p => `${p}: ${match.scores[p] ?? 0}`);
+      scoreLine.textContent = parts.join(" • ");
+    }
+
+    function startTimer(){
+      stopTimer();
+      timerPill.textContent = formatTime(remainingSeconds);
+      statusPill.textContent = "Rodada em andamento";
+
+      timerId = setInterval(() => {
+        remainingSeconds = Math.max(0, remainingSeconds - 1);
+        timerPill.textContent = formatTime(remainingSeconds);
+
+        if(remainingSeconds <= 0){
+          stopTimer();
+          statusPill.textContent = "Tempo esgotado";
+          setButtonsEnabled(false);
+          showConfirmUI(false);
+          showTimeUpUI(true);
+        }
+      }, 1000);
+    }
+
+    function advanceActor(){
+      match.actorIndex = (match.actorIndex + 1) % match.players.length;
+    }
+
+    function beginRound(){
+      // mantém regras:
+      // - novo filme quando a rodada começa (ou após OK/confirm)
+      // - timer reseta no começo de cada rodada
+      showTimeUpUI(false);
+      showConfirmUI(false);
+      setButtonsEnabled(true);
+      setTab("titles");
+
+      resetTimer();
+      currentMovie = drawNextMovie();
+      renderMovie(currentMovie);
+      updateHeader();
+      updateScoreLine();
+      startTimer();
+    }
+
+    function endMatchAndShowRanking(){
+      stopTimer();
+      showTimeUpUI(false);
+      showConfirmUI(false);
+
+      // Ranking desc
+      const ranking = match.players
+        .map((p, i) => ({ name:p, score: match.scores[p] ?? 0, idx:i }))
+        .sort((a,b) => b.score - a.score || a.idx - b.idx);
+
+      rankingBody.innerHTML = "";
+      ranking.forEach((r, i) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${i+1}</td><td>${escapeHtml(r.name)}</td><td>${r.score}</td>`;
+        rankingBody.appendChild(tr);
+      });
+
+      switchScreen("ranking");
+    }
+
+    // =========================
+    // Setup UI (players inputs)
+    // =========================
+    function renderPlayersInputs(){
+      const n = clampInt(numPlayersEl.value, 2, 12);
+      numPlayersEl.value = String(n);
+
+      playersListEl.innerHTML = "";
+      for(let i=0; i<n; i++){
+        const wrap = document.createElement("div");
+        wrap.className = "field";
+        wrap.style.padding = "10px";
+
+        const lab = document.createElement("label");
+        lab.textContent = `Jogador ${i+1}`;
+        lab.htmlFor = `player_${i}`;
+
+        const inp = document.createElement("input");
+        inp.id = `player_${i}`;
+        inp.type = "text";
+        inp.placeholder = `Nome do jogador ${i+1}`;
+        inp.value = defaultName(i);
+
+        wrap.appendChild(lab);
+        wrap.appendChild(inp);
+        playersListEl.appendChild(wrap);
+      }
+    }
+
+    function defaultName(i){
+      const defaults = ["Ana","Bruno","Sara","Manda","Rafa","João","Lia","Carlos","Nina","Tiago","Luís","Bia"];
+      return defaults[i] || `Jogador ${i+1}`;
+    }
+
+    function clampInt(v, min, max){
+      const n = parseInt(v, 10);
+      if(Number.isNaN(n)) return min;
+      return Math.max(min, Math.min(max, n));
+    }
+
+    function collectPlayers(){
+      const n = clampInt(numPlayersEl.value, 2, 12);
+      const names = [];
+      for(let i=0; i<n; i++){
+        const inp = document.getElementById(`player_${i}`);
+        const name = (inp?.value || "").trim();
+        if(!name) return { ok:false, msg:`Jogador ${i+1} está sem nome.` };
+        names.push(name);
+      }
+      // Evita duplicados
+      const lower = names.map(x => x.toLowerCase());
+      const set = new Set(lower);
+      if(set.size !== lower.length) return { ok:false, msg:"Existem nomes repetidos. Ajuste para evitar confusão." };
+      return { ok:true, names };
+    }
+
+    function setupMatch(keepPlayers=false){
+      const target = clampInt(targetCorrectEl.value, 1, 999);
+      targetCorrectEl.value = String(target);
+
+      const playersRes = keepPlayers ? { ok:true, names: match?.players } : collectPlayers();
+      if(!playersRes.ok){
+        alert(playersRes.msg);
+        return false;
+      }
+
+      match = {
+        targetCorrect: target,
+        moviesPlayed: 0,
+        players: playersRes.names.slice(),
+        actorIndex: 0,
+        scores: {},
+        deck: [],
+        deckIndex: 0,
+        recentIds: []
+      };
+      match.players.forEach(p => match.scores[p] = 0);
+      buildDeck();
+
+      playedTargetEl.textContent = String(match.targetCorrect);
+      return true;
+    }
+
+    // =========================
+    // Correct flow
+    // =========================
+    function openCorrectFlow(){
+      if(!timerId) return;
+      stopTimer(); // pausa enquanto seleciona
+      statusPill.textContent = "Registrar acerto";
+      setButtonsEnabled(false);
+      showTimeUpUI(false);
+
+      // preencher selects
+      const actor = match.players[match.actorIndex];
+      actorReadonly.value = actor;
+
+      guesserSelect.innerHTML = "";
+      match.players.forEach(p => {
+        if(p === actor) return; // quem acertou não pode ser o mesmo (por regra do jogo)
+        const opt = document.createElement("option");
+        opt.value = p;
+        opt.textContent = p;
+        guesserSelect.appendChild(opt);
+      });
+
+      // Se só tiver 1 opção, ok. Se tiver 0 (caso absurdo 1 jogador), mas min é 2.
+      showConfirmUI(true);
+    }
+
+    function cancelCorrectFlow(){
+      // retoma timer
+      showConfirmUI(false);
+      setButtonsEnabled(true);
+      statusPill.textContent = "Rodada em andamento";
+      startTimer();
+    }
+
+    function confirmCorrectFlow(){
+      const actor = match.players[match.actorIndex];
+      const guesser = guesserSelect.value;
+
+      if(!guesser){
+        alert("Selecione quem acertou.");
+        return;
+      }
+
+      // Pontos
+      match.scores[actor] = (match.scores[actor] ?? 0) + 1;
+      match.scores[guesser] = (match.scores[guesser] ?? 0) + 2;
+
+      // moviesPlayed só incrementa aqui
+      match.moviesPlayed += 1;
+
+      updateHeader();
+      updateScoreLine();
+
+      showConfirmUI(false);
+
+      // Fim da partida?
+      if(match.moviesPlayed >= match.targetCorrect){
+        endMatchAndShowRanking();
+        return;
+      }
+
+      // Avança actor, nova rodada (timer reseta)
+      advanceActor();
+      beginRound();
+    }
+
+    // =========================
+    // Time up flow
+    // =========================
+    function acknowledgeTimeUp(){
+      // Tempo acabou: actor -1; moviesPlayed não muda
+      const actor = match.players[match.actorIndex];
+      match.scores[actor] = (match.scores[actor] ?? 0) - 1;
+
+      updateScoreLine();
+      showTimeUpUI(false);
+
+      // Avança actor e começa nova rodada (timer reseta)
+      advanceActor();
+      beginRound();
+    }
+
+    // =========================
+    // Skip flow
+    // =========================
+    function skipMovie(){
+      // Regras: não muda actor, não altera moviesPlayed, não altera pontos, timer continua
+      if(!timerId) return;
+      currentMovie = drawNextMovie();
+      renderMovie(currentMovie);
+      // mantém a tab atual, mas por UX volta para títulos
+      setTab("titles");
+    }
+
+    // =========================
+    // Poster reveal
+    // =========================
+    function togglePosters(){
+      const imgs = posterGrid.querySelectorAll("img");
+      if(!imgs.length) return;
+
+      postersRevealed = !postersRevealed;
+      imgs.forEach(img => img.classList.toggle("blurred", !postersRevealed));
+      btnTogglePoster.textContent = postersRevealed ? "Esconder posters" : "Revelar posters";
+    }
+
+    // =========================
+    // Ranking actions
+    // =========================
+    function newMatch(){
+      stopTimer();
+      match = null;
+      renderPlayersInputs();
+      switchScreen("setup");
+    }
+
+    function playAgainSamePlayers(){
+      if(!match) return;
+      // mantém nomes e alvo atual
+      const ok = setupMatch(true);
+      if(!ok) return;
+      switchScreen("game");
+      beginRound();
+    }
+
+    // =========================
+    // Event wiring
+    // =========================
+    tabTitles.addEventListener("click", () => setTab("titles"));
+    tabSynopsis.addEventListener("click", () => setTab("synopsis"));
+    tabPoster.addEventListener("click", () => setTab("poster"));
+
+    btnTogglePoster.addEventListener("click", togglePosters);
+
+    btnCorrect.addEventListener("click", openCorrectFlow);
+    btnCancelCorrect.addEventListener("click", cancelCorrectFlow);
+    btnConfirmCorrect.addEventListener("click", confirmCorrectFlow);
+
+    btnSkip.addEventListener("click", skipMovie);
+
+    btnTimeUpOk.addEventListener("click", acknowledgeTimeUp);
+
+    btnEndMatch.addEventListener("click", () => {
+      if(confirm("Encerrar a partida e ver o ranking atual?")){
+        endMatchAndShowRanking();
+      }
+    });
+
+    btnNewMatch.addEventListener("click", newMatch);
+    btnPlayAgain.addEventListener("click", playAgainSamePlayers);
+
+    numPlayersEl.addEventListener("change", renderPlayersInputs);
+    numPlayersEl.addEventListener("input", () => {
+      // mantém controlado
+      const n = clampInt(numPlayersEl.value, 2, 12);
+      numPlayersEl.value = String(n);
+    });
+
+    btnStartMatch.addEventListener("click", () => {
+      const ok = setupMatch(false);
+      if(!ok) return;
+
+      switchScreen("game");
+      beginRound();
+    });
+
+    // =========================
+    // Init
+    // =========================
+    function init(){
+      timerPill.textContent = formatTime(ROUND_SECONDS);
+      renderPlayersInputs();
+      switchScreen("setup");
+      setTab("titles");
+      showTimeUpUI(false);
+      showConfirmUI(false);
+      setButtonsEnabled(true);
+    }
+    init();
+  </script>
+</body>
+</html>
