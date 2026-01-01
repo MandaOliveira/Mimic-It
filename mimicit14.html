@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Mimic It (MVP)</title>
+  <style>
+    :root{
+      --bg:#0b0f14; --card:#121824; --muted:#9aa7b2; --text:#e9eef3;
+      --btn:#1f2a3a; --btn2:#27364a; --ok:#1f6f4a; --skip:#6b4a1f; --primary:#2b3b52;
+      --warn:#6b1f2a; --chip:#0e1520;
+    }
+    body{ margin:0; font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; background:var(--bg); color:var(--text); }
+    .wrap{ max-width:820px; margin:0 auto; padding:18px; }
+    .card{ background:var(--card); border-radius:18px; padding:16px; box-shadow:0 8px 24px rgba(0,0,0,.35); }
+    h1{ margin:0 0 6px; font-size:26px; }
+    .sub{ color:var(--muted); margin:0 0 14px; }
+    .row{ display:flex; gap:12px; flex-wrap:wrap; }
+    .btn{
+      appearance:none; border:0; border-radius:14px; padding:14px 16px;
+      background:var(--btn); color:var(--text); font-weight:800; font-size:16px;
+      cursor:pointer; flex:1; min-width:170px;
+    }
+    .btn:hover{ background:var(--btn2); }
+    .btn.primary{ background:var(--primary); }
+    .btn.ok{ background:var(--ok); }
+    .btn.skip{ background:var(--skip); }
+    .btn.small{ padding:10px 12px; font-size:14px; min-width:140px; flex:0; }
+    .btn:disabled{ opacity:.5; cursor:not-allowed; }
+
+    .topbar{ display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px; flex-wrap:wrap; }
+    .pill{ background:var(--chip); padding:10px 12px; border-radius:999px; font-weight:900; letter-spacing:.4px; }
+    .timer{ font-variant-numeric: tabular-nums; }
+
+    .hidden{ display:none; }
+    .tiny{ font-size:12px; color:var(--muted); margin-top:10px; }
+
+    .tabs{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+    .tab{
+      appearance:none; border:1px solid rgba(255,255,255,.10);
+      background:transparent; color:var(--text);
+      padding:10px 12px; border-radius:999px; cursor:pointer; font-weight:800;
+    }
+    .tab.active{ background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.18); }
+
+    .panel{ margin-top:12px; }
+    .lang{ display:grid; grid-template-columns:88px 1fr; gap:10px; padding:10px 0; border-top:1px solid rgba(255,255,255,.06); }
+    .lang:first-child{ border-top:0; }
+    .tag{ color:var(--muted); font-weight:800; }
+    .title{ font-size:18px; font-weight:900; line-height:1.25; }
+
+    .synopsis{
+      color:var(--text);
+      line-height:1.35;
+      font-size:15px;
+      padding:12px;
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:14px;
+      background:rgba(255,255,255,.03);
+    }
+    .synopsis .muted{ color:var(--muted); font-size:12px; margin-bottom:8px; }
+
+    .posterBox{
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:14px;
+      overflow:hidden;
+      background:rgba(255,255,255,.03);
+    }
+    .posterBox img{
+      width:100%;
+      height:auto;
+      display:block;
+    }
+    .blurred{ filter: blur(14px); transform: scale(1.05); }
+    .posterActions{ display:flex; justify-content:flex-end; margin-top:10px; }
+
+    .banner{
+      margin-top:14px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.08);
+      border-left: 6px solid var(--warn);
+      border-radius: 14px;
+      padding: 12px 12px;
+    }
+    .banner strong{ display:block; margin-bottom:4px; }
+
+    @media (max-width: 420px){
+      .wrap{ padding:12px; }
+      .btn{ min-width: 150px; }
+      .lang{ grid-template-columns:72px 1fr; }
+      .title{ font-size:17px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+
+    <!-- HOME -->
+    <section id="home" class="card">
+      <h1>Mimic It</h1>
+      <p class="sub">Movies without language barriers</p>
+
+      <div class="row">
+        <button id="btnStart" class="btn primary">Próximo Filme</button>
+      </div>
+
+      <p class="tiny">
+        Regras: 2 minutos por rodada. Pular não reinicia o tempo. “Acertou” termina a rodada. Se o tempo acabar, ninguém pontua.
+      </p>
+    </section>
+
+    <!-- GAME -->
+    <section id="game" class="card hidden" aria-live="polite">
+      <div class="topbar">
+        <div class="pill timer" id="timerPill">02:00</div>
+        <div class="pill" id="statusPill">Rodada em andamento</div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs" role="tablist" aria-label="Informações do filme">
+        <button class="tab active" id="tabTitles" role="tab" aria-selected="true">Títulos</button>
+        <button class="tab" id="tabSynopsis" role="tab" aria-selected="false">Sinopse</button>
+        <button class="tab" id="tabPoster" role="tab" aria-selected="false">Poster</button>
+      </div>
+
+      <!-- Panels -->
+      <div class="panel" id="panelTitles" role="tabpanel">
+        <div id="titlesBox"></div>
+      </div>
+
+      <div class="panel hidden" id="panelSynopsis" role="tabpanel">
+        <div class="synopsis">
+          <div class="muted">Sinopse breve</div>
+          <div id="synopsisText">—</div>
+        </div>
+      </div>
+
+      <div class="panel hidden" id="panelPoster" role="tabpanel">
+        <div class="posterBox">
+          <img id="posterImg" alt="Poster do filme" />
+        </div>
+        <div class="posterActions">
+          <button id="btnTogglePoster" class="btn small">Revelar poster</button>
+        </div>
+        <p class="tiny">Dica: o poster pode dar spoiler. Começa desfocado.</p>
+      </div>
+
+      <!-- Actions -->
+      <div class="row" style="margin-top:16px;">
+        <button id="btnCorrect" class="btn ok">✅ Acertou</button>
+        <button id="btnSkip" class="btn skip">⏭ Pular</button>
+      </div>
+
+      <!-- Time up message -->
+      <div id="timeUpArea" class="banner hidden">
+        <strong>Tempo esgotado</strong>
+        <div>Ninguém acertou, jogador não pontua.</div>
+        <div class="row" style="margin-top:12px;">
+          <button id="btnTimeUpOk" class="btn primary" style="flex:0;min-width:160px;">OK</button>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    const ROUND_SECONDS = 120;
+
+    // Para o MVP: sinopse em 1 idioma só (pode evoluir depois para 4 idiomas também)
+    // Poster URL: use links diretos (jpg/png). Se não tiver, coloque vazio "".
+    const MOVIES = [
+      {
+        id:"m1",
+        pt_br:"O Poderoso Chefão", pt_pt:"O Padrinho", en:"The Godfather", de:"Der Pate",
+        synopsis:"A ascensão e os dilemas de uma família mafiosa enquanto poder, lealdade e tradição colidem.",
+        poster_url:""
+      },
+      {
+        id:"m2",
+        pt_br:"Esqueceram de Mim", pt_pt:"Sozinho em Casa", en:"Home Alone", de:"Kevin – Allein zu Haus",
+        synopsis:"Um menino fica sozinho em casa no Natal e precisa se virar (e se defender) quando ladrões aparecem.",
+        poster_url:""
+      },
+      {
+        id:"m3",
+        pt_br:"De Volta para o Futuro", pt_pt:"Regresso ao Futuro", en:"Back to the Future", de:"Zurück in die Zukunft",
+        synopsis:"Um adolescente viaja no tempo e precisa garantir que seus pais se apaixonem para preservar o futuro.",
+        poster_url:""
+      },
+      {
+        id:"m4",
+        pt_br:"A Viagem de Chihiro", pt_pt:"A Viagem de Chihiro", en:"Spirited Away", de:"Chihiros Reise ins Zauberland",
+        synopsis:"Uma garota entra num mundo mágico e precisa salvar seus pais enquanto aprende a ser corajosa.",
+        poster_url:""
+      }
+    ];
+
+    let remainingSeconds = ROUND_SECONDS;
+    let timerId = null;
+    let usedMovieIds = new Set();
+    let currentMovie = null;
+    let posterRevealed = false;
+
+    // DOM
+    const home = document.getElementById("home");
+    const game = document.getElementById("game");
+    const btnStart = document.getElementById("btnStart");
+
+    const timerPill = document.getElementById("timerPill");
+    const statusPill = document.getElementById("statusPill");
+
+    const btnSkip = document.getElementById("btnSkip");
+    const btnCorrect = document.getElementById("btnCorrect");
+
+    const timeUpArea = document.getElementById("timeUpArea");
+    const btnTimeUpOk = document.getElementById("btnTimeUpOk");
+
+    // Tabs
+    const tabTitles = document.getElementById("tabTitles");
+    const tabSynopsis = document.getElementById("tabSynopsis");
+    const tabPoster = document.getElementById("tabPoster");
+    const panelTitles = document.getElementById("panelTitles");
+    const panelSynopsis = document.getElementById("panelSynopsis");
+    const panelPoster = document.getElementById("panelPoster");
+
+    const titlesBox = document.getElementById("titlesBox");
+    const synopsisText = document.getElementById("synopsisText");
+    const posterImg = document.getElementById("posterImg");
+    const btnTogglePoster = document.getElementById("btnTogglePoster");
+
+    // Helpers
+    const pad2 = n => String(n).padStart(2, "0");
+    const formatTime = s => `${pad2(Math.floor(s/60))}:${pad2(s%60)}`;
+
+    function showHome(){
+      game.classList.add("hidden");
+      home.classList.remove("hidden");
+    }
+    function showGame(){
+      home.classList.add("hidden");
+      game.classList.remove("hidden");
+    }
+    function stopTimer(){
+      if (timerId) clearInterval(timerId);
+      timerId = null;
+    }
+    function setButtonsEnabled(enabled){
+      btnSkip.disabled = !enabled;
+      btnCorrect.disabled = !enabled;
+    }
+    function showTimeUpUI(show){
+      timeUpArea.classList.toggle("hidden", !show);
+    }
+
+    function resetRoundState(){
+      stopTimer();
+      remainingSeconds = ROUND_SECONDS;
+      usedMovieIds.clear();
+      timerPill.textContent = formatTime(ROUND_SECONDS);
+      statusPill.textContent = "Rodada em andamento";
+      showTimeUpUI(false);
+      setButtonsEnabled(true);
+      setTab("titles");
+    }
+
+    function pickMovie(){
+      let list = MOVIES.filter(m => !usedMovieIds.has(m.id));
+      if (list.length === 0){
+        usedMovieIds.clear();
+        list = MOVIES.slice();
+      }
+      const m = list[Math.floor(Math.random() * list.length)];
+      usedMovieIds.add(m.id);
+      return m;
+    }
+
+    function renderCurrentMovie(){
+      if (!currentMovie) return;
+
+      // Titles panel
+      titlesBox.innerHTML = `
+        <div class="lang"><div class="tag">PT-BR</div><div class="title">${currentMovie.pt_br}</div></div>
+        <div class="lang"><div class="tag">PT-PT</div><div class="title">${currentMovie.pt_pt}</div></div>
+        <div class="lang"><div class="tag">EN</div><div class="title">${currentMovie.en}</div></div>
+        <div class="lang"><div class="tag">DE</div><div class="title">${currentMovie.de}</div></div>
+      `;
+
+      // Synopsis panel
+      synopsisText.textContent = currentMovie.synopsis || "—";
+
+      // Poster panel
+      posterRevealed = false;
+      btnTogglePoster.textContent = "Revelar poster";
+
+      if (currentMovie.poster_url){
+        posterImg.src = currentMovie.poster_url;
+        posterImg.classList.add("blurred");
+        posterImg.alt = `Poster: ${currentMovie.en || currentMovie.pt_br}`;
+      } else {
+        // fallback simples se não houver imagem
+        posterImg.removeAttribute("src");
+        posterImg.alt = "Poster indisponível no MVP";
+        posterImg.classList.remove("blurred");
+      }
+    }
+
+    function startTimer(){
+      stopTimer();
+      timerPill.textContent = formatTime(remainingSeconds);
+
+      timerId = setInterval(() => {
+        remainingSeconds = Math.max(0, remainingSeconds - 1);
+        timerPill.textContent = formatTime(remainingSeconds);
+
+        if (remainingSeconds <= 0){
+          stopTimer();
+          statusPill.textContent = "Tempo esgotado";
+          setButtonsEnabled(false);
+          showTimeUpUI(true);
+        }
+      }, 1000);
+    }
+
+    function startRound(){
+      resetRoundState();
+      currentMovie = pickMovie();
+      renderCurrentMovie();
+      showGame();
+      startTimer();
+    }
+
+    function skipMovie(){
+      if (!timerId) return;
+      currentMovie = pickMovie();
+      renderCurrentMovie();
+    }
+
+    function correct(){
+      if (!timerId) return;
+      resetRoundState();
+      showHome();
+    }
+
+    function acknowledgeTimeUp(){
+      resetRoundState();
+      showHome();
+    }
+
+    // Tabs behavior
+    function setTab(which){
+      const isTitles = which === "titles";
+      const isSynopsis = which === "synopsis";
+      const isPoster = which === "poster";
+
+      tabTitles.classList.toggle("active", isTitles);
+      tabSynopsis.classList.toggle("active", isSynopsis);
+      tabPoster.classList.toggle("active", isPoster);
+
+      tabTitles.setAttribute("aria-selected", String(isTitles));
+      tabSynopsis.setAttribute("aria-selected", String(isSynopsis));
+      tabPoster.setAttribute("aria-selected", String(isPoster));
+
+      panelTitles.classList.toggle("hidden", !isTitles);
+      panelSynopsis.classList.toggle("hidden", !isSynopsis);
+      panelPoster.classList.toggle("hidden", !isPoster);
+    }
+
+    tabTitles.addEventListener("click", () => setTab("titles"));
+    tabSynopsis.addEventListener("click", () => setTab("synopsis"));
+    tabPoster.addEventListener("click", () => setTab("poster"));
+
+    btnTogglePoster.addEventListener("click", () => {
+      if (!currentMovie || !currentMovie.poster_url) return;
+      posterRevealed = !posterRevealed;
+      posterImg.classList.toggle("blurred", !posterRevealed);
+      btnTogglePoster.textContent = posterRevealed ? "Esconder poster" : "Revelar poster";
+    });
+
+    // Events
+    btnStart.addEventListener("click", startRound);
+    btnSkip.addEventListener("click", skipMovie);
+    btnCorrect.addEventListener("click", correct);
+    btnTimeUpOk.addEventListener("click", acknowledgeTimeUp);
+
+    // Initial
+    resetRoundState();
+    showHome();
+  </script>
+</body>
+</html>
